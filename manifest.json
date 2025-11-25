@@ -1,0 +1,21 @@
+[
+  {
+    "guid": "19b92b8c-3926-4449-8432-10d30ab75a05",
+    "name": "LogoSwap",
+    "description": "Swap the default Jellyfin logo with your own custom branding.",
+    "overview": "Upload a custom logo to replace Jellyfin branding throughout the interface.",
+    "owner": "NewsGuyTor",
+    "category": "General",
+    "imageUrl": "https://raw.githubusercontent.com/NewsGuyTor/LogoSwap/main/static/icon.png",
+    "versions": [
+      {
+        "version": "1.0.0",
+        "changelog": "Initial release. Upload custom logos, auto-inject via branding settings, Jellyfin 10.11 compatible.",
+        "targetAbi": "10.11.0.0",
+        "sourceUrl": "https://github.com/NewsGuyTor/LogoSwap/releases/download/1.0.0/LogoSwap_1.0.0.zip",
+        "checksum": "d3568c4bd370d07efb6748992526914b",
+        "timestamp": "2025-11-25T12:00:00Z"
+      }
+    ]
+  }
+]

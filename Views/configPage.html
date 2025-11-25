@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>LogoSwap</title>
+</head>
+<body>
+    <div id="LogoSwapConfigPage" data-role="page" class="page type-interior pluginConfigurationPage" data-require="emby-button,emby-input">
+        <div data-role="content">
+            <div class="content-primary">
+                <form id="LogoSwapConfigForm" class="logoSwapForm">
+                    <div class="sectionTitleContainer flex align-items-center">
+                        <h2 class="sectionTitle">LogoSwap</h2>
+                    </div>
+
+                    <div class="verticalSection">
+                        <div class="sectionTitleContainer">
+                            <h3 class="sectionTitle">Upload Custom Logo</h3>
+                        </div>
+                        <div class="fieldDescription">
+                            Upload a PNG image to replace the Jellyfin logo throughout the interface.
+                        </div>
+                        
+                        <div class="inputContainer" style="margin-top: 1em;">
+                            <input type="file" id="logoFile" accept="image/png" style="display: none;" />
+                            <button type="button" id="selectFileBtn" is="emby-button" class="raised button-submit block">
+                                <span>Select Logo Image (PNG)</span>
+                            </button>
+                            <div id="selectedFileName" style="margin-top: 0.5em; color: #888;"></div>
+                        </div>
+
+                        <div style="margin-top: 1em;">
+                            <button type="button" id="uploadBtn" is="emby-button" class="raised button-submit block" disabled>
+                                <span>Upload Logo</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="verticalSection" id="currentLogoSection" style="display: none;">
+                        <div class="sectionTitleContainer">
+                            <h3 class="sectionTitle">Current Logo</h3>
+                        </div>
+                        <div style="background: #1a1a1a; padding: 20px; border-radius: 8px; text-align: center; margin-bottom: 1em;">
+                            <img id="currentLogoPreview" src="" alt="Current Logo" style="max-width: 300px; max-height: 100px; object-fit: contain;" />
+                        </div>
+                        <button type="button" id="deleteBtn" is="emby-button" class="raised button-cancel block">
+                            <span>Delete Logo (Restore Default)</span>
+                        </button>
+                    </div>
+
+                    <div class="verticalSection">
+                        <div class="sectionTitleContainer">
+                            <h3 class="sectionTitle">Apply Logo to Jellyfin</h3>
+                        </div>
+                        <div class="fieldDescription">
+                            Click the button below to automatically inject the logo replacement script into Jellyfin's branding settings.
+                            This will make the custom logo appear across all Jellyfin pages.
+                        </div>
+                        <div style="margin-top: 1em;">
+                            <button type="button" id="applyBrandingBtn" is="emby-button" class="raised button-submit block">
+                                <span>Apply Custom Logo to Branding</span>
+                            </button>
+                        </div>
+                        <div style="margin-top: 0.5em;">
+                            <button type="button" id="removeBrandingBtn" is="emby-button" class="raised button-cancel block">
+                                <span>Remove Custom Logo from Branding</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="verticalSection">
+                        <div class="sectionTitleContainer">
+                            <h3 class="sectionTitle">Status</h3>
+                        </div>
+                        <div id="statusMessage" class="fieldDescription" style="padding: 10px; border-radius: 4px; background: #2a2a2a;">
+                            Checking status...
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+
+        <script type="text/javascript">
+            (function() {
+                'use strict';
+
+                var selectedFile = null;
+                var INJECTION_MARKER = '/* LogoSwap */';
+                var END_MARKER = '/* END LogoSwap */';
+
+                function init() {
+                    var page = document.querySelector('#LogoSwapConfigPage');
+                    
+                    page.querySelector('#selectFileBtn').addEventListener('click', function() {
+                        page.querySelector('#logoFile').click();
+                    });
+
+                    page.querySelector('#logoFile').addEventListener('change', function(e) {
+                        selectedFile = e.target.files[0];
+                        if (selectedFile) {
+                            page.querySelector('#selectedFileName').textContent = 'Selected: ' + selectedFile.name;
+                            page.querySelector('#uploadBtn').disabled = false;
+                        }
+                    });
+
+                    page.querySelector('#uploadBtn').addEventListener('click', function() {
+                        if (!selectedFile) return;
+                        uploadLogo(page);
+                    });
+
+                    page.querySelector('#deleteBtn').addEventListener('click', function() {
+                        deleteLogo(page);
+                    });
+
+                    page.querySelector('#applyBrandingBtn').addEventListener('click', function() {
+                        applyBranding(page);
+                    });
+
+                    page.querySelector('#removeBrandingBtn').addEventListener('click', function() {
+                        removeBranding(page);
+                    });
+
+                    checkStatus(page);
+                }
+
+                function checkStatus(page) {
+                    var statusEl = page.querySelector('#statusMessage');
+                    var logoSection = page.querySelector('#currentLogoSection');
+                    var previewImg = page.querySelector('#currentLogoPreview');
+
+                    fetch('/logoswap/status', { credentials: 'include' })
+                    .then(function(response) { return response.json(); })
+                    .then(function(data) {
+                        if (data.hasLogo) {
+                            logoSection.style.display = 'block';
+                            previewImg.src = data.logoUrl + '?t=' + Date.now();
+                            checkBrandingStatus(page, statusEl);
+                        } else {
+                            logoSection.style.display = 'none';
+                            statusEl.innerHTML = '<span style="color: #888;">No custom logo uploaded</span><br><small>Upload a PNG image to get started.</small>';
+                        }
+                    })
+                    .catch(function(err) {
+                        statusEl.innerHTML = '<span style="color: #ff5722;">Error checking status</span>';
+                    });
+                }
+
+                function checkBrandingStatus(page, statusEl) {
+                    var cssMarker = '/* LogoSwap CSS */';
+                    ApiClient.getNamedConfiguration('branding').then(function(config) {
+                        var hasJsInjection = config.CustomJs && config.CustomJs.indexOf(INJECTION_MARKER) !== -1;
+                        var hasCssInjection = config.CustomCss && config.CustomCss.indexOf(cssMarker) !== -1;
+                        
+                        if (hasJsInjection || hasCssInjection) {
+                            var methods = [];
+                            if (hasJsInjection) methods.push('JavaScript');
+                            if (hasCssInjection) methods.push('CSS');
+                            statusEl.innerHTML = '<span style="color: #4caf50;">✓ Custom logo is active (' + methods.join(' + ') + ')</span><br><small>Hard refresh your browser (Ctrl+Shift+R) to see changes.</small>';
+                        } else {
+                            statusEl.innerHTML = '<span style="color: #ff9800;">⚠ Logo uploaded but not applied</span><br><small>Click "Apply Custom Logo to Branding" to activate the logo replacement.</small>';
+                        }
+                    }).catch(function(err) {
+                        statusEl.innerHTML = '<span style="color: #4caf50;">✓ Custom logo uploaded</span><br><small>Click "Apply Custom Logo to Branding" to activate.</small>';
+                    });
+                }
+
+                function uploadLogo(page) {
+                    var statusEl = page.querySelector('#statusMessage');
+                    var uploadBtn = page.querySelector('#uploadBtn');
+                    
+                    uploadBtn.disabled = true;
+                    statusEl.innerHTML = '<span style="color: #2196f3;">Uploading...</span>';
+
+                    var formData = new FormData();
+                    formData.append('file', selectedFile);
+
+                    fetch('/logoswap/upload', {
+                        method: 'POST',
+                        body: formData,
+                        credentials: 'include'
+                    })
+                    .then(function(response) {
+                        if (!response.ok) {
+                            return response.text().then(function(text) {
+                                throw new Error(text || 'Upload failed');
+                            });
+                        }
+                        return response.text();
+                    })
+                    .then(function(result) {
+                        statusEl.innerHTML = '<span style="color: #4caf50;">✓ ' + result + '</span>';
+                        selectedFile = null;
+                        page.querySelector('#selectedFileName').textContent = '';
+                        page.querySelector('#logoFile').value = '';
+                        uploadBtn.disabled = true;
+                        checkStatus(page);
+                    })
+                    .catch(function(err) {
+                        statusEl.innerHTML = '<span style="color: #ff5722;">✗ Error: ' + err.message + '</span>';
+                        uploadBtn.disabled = false;
+                    });
+                }
+
+                function deleteLogo(page) {
+                    var statusEl = page.querySelector('#statusMessage');
+                    
+                    if (!confirm('Delete the custom logo and restore default Jellyfin branding?')) {
+                        return;
+                    }
+
+                    statusEl.innerHTML = '<span style="color: #2196f3;">Deleting...</span>';
+
+                    fetch('/logoswap/delete', {
+                        method: 'DELETE',
+                        credentials: 'include'
+                    })
+                    .then(function(response) {
+                        if (!response.ok) {
+                            return response.text().then(function(text) {
+                                throw new Error(text || 'Delete failed');
+                            });
+                        }
+                        return response.text();
+                    })
+                    .then(function(result) {
+                        statusEl.innerHTML = '<span style="color: #4caf50;">✓ ' + result + '</span>';
+                        // Also remove from branding
+                        removeBranding(page, true);
+                        checkStatus(page);
+                    })
+                    .catch(function(err) {
+                        statusEl.innerHTML = '<span style="color: #ff5722;">✗ Error: ' + err.message + '</span>';
+                    });
+                }
+
+                function applyBranding(page) {
+                    var statusEl = page.querySelector('#statusMessage');
+                    statusEl.innerHTML = '<span style="color: #2196f3;">Applying branding...</span>';
+
+                    // First get the injection script
+                    fetch('/logoswap/script', { credentials: 'include' })
+                    .then(function(response) { return response.text(); })
+                    .then(function(script) {
+                        // Get current branding config
+                        return ApiClient.getNamedConfiguration('branding').then(function(config) {
+                            // Remove existing JS injection if present
+                            var existingJs = config.CustomJs || '';
+                            if (existingJs.indexOf(INJECTION_MARKER) !== -1) {
+                                var startIdx = existingJs.indexOf(INJECTION_MARKER);
+                                var endIdx = existingJs.indexOf(END_MARKER);
+                                if (endIdx > startIdx) {
+                                    existingJs = existingJs.substring(0, startIdx) + existingJs.substring(endIdx + END_MARKER.length);
+                                    existingJs = existingJs.trim();
+                                }
+                            }
+                            
+                            // Add new JS injection
+                            config.CustomJs = existingJs ? existingJs + '\n\n' + script : script;
+                            
+                            // Also add CSS as backup method
+                            var cssMarker = '/* LogoSwap CSS */';
+                            var cssEndMarker = '/* END LogoSwap CSS */';
+                            var existingCss = config.CustomCss || '';
+                            
+                            // Remove existing CSS injection
+                            if (existingCss.indexOf(cssMarker) !== -1) {
+                                var cssStart = existingCss.indexOf(cssMarker);
+                                var cssEnd = existingCss.indexOf(cssEndMarker);
+                                if (cssEnd > cssStart) {
+                                    existingCss = existingCss.substring(0, cssStart) + existingCss.substring(cssEnd + cssEndMarker.length);
+                                    existingCss = existingCss.trim();
+                                }
+                            }
+                            
+                            // Add CSS injection for logo replacement
+                            // Jellyfin uses h3.pageTitleWithLogo with background-image, not <img> tags
+                            var logoUrl = '/logoswap/image?v=' + Date.now();
+                            var cssInjection = cssMarker + '\n' +
+                                '/* Header logo - h3 element with background-image */\n' +
+                                'h3.pageTitle.pageTitleWithLogo {\n' +
+                                '  background-image: url("' + logoUrl + '") !important;\n' +
+                                '  background-size: contain !important;\n' +
+                                '  background-repeat: no-repeat !important;\n' +
+                                '  background-position: center left !important;\n' +
+                                '}\n' +
+                                '.pageTitleWithDefaultLogo {\n' +
+                                '  background-image: url("' + logoUrl + '") !important;\n' +
+                                '}\n' +
+                                '/* Sidebar/drawer logo */\n' +
+                                '.mainDrawer .logoImage, .navDrawerLogo, .adminDrawerLogo {\n' +
+                                '  background-image: url("' + logoUrl + '") !important;\n' +
+                                '  background-size: contain !important;\n' +
+                                '  background-repeat: no-repeat !important;\n' +
+                                '  background-position: center !important;\n' +
+                                '}\n' +
+                                '/* Banner images used in some places */\n' +
+                                'img[src*="banner-light"], img[src*="banner-dark"], img[src*="icon-transparent"] {\n' +
+                                '  content: url("' + logoUrl + '") !important;\n' +
+                                '}\n' +
+                                '.imgLogoIcon {\n' +
+                                '  content: url("' + logoUrl + '") !important;\n' +
+                                '}\n' +
+                                cssEndMarker;
+                            
+                            config.CustomCss = existingCss ? existingCss + '\n\n' + cssInjection : cssInjection;
+                            
+                            return ApiClient.updateNamedConfiguration('branding', config);
+                        });
+                    })
+                    .then(function() {
+                        statusEl.innerHTML = '<span style="color: #4caf50;">✓ Custom logo applied to branding!</span><br><small>Hard refresh your browser (Ctrl+Shift+R or Cmd+Shift+R) to see the new logo.</small>';
+                    })
+                    .catch(function(err) {
+                        statusEl.innerHTML = '<span style="color: #ff5722;">✗ Error: ' + err.message + '</span><br><small>Make sure you have admin privileges.</small>';
+                    });
+                }
+
+                function removeBranding(page, silent) {
+                    var statusEl = page.querySelector('#statusMessage');
+                    if (!silent) {
+                        statusEl.innerHTML = '<span style="color: #2196f3;">Removing branding...</span>';
+                    }
+
+                    var cssMarker = '/* LogoSwap CSS */';
+                    var cssEndMarker = '/* END LogoSwap CSS */';
+
+                    ApiClient.getNamedConfiguration('branding').then(function(config) {
+                        var changed = false;
+                        var existingJs = config.CustomJs || '';
+                        var existingCss = config.CustomCss || '';
+                        
+                        // Remove JS injection
+                        if (existingJs.indexOf(INJECTION_MARKER) !== -1) {
+                            var startIdx = existingJs.indexOf(INJECTION_MARKER);
+                            var endIdx = existingJs.indexOf(END_MARKER);
+                            if (endIdx > startIdx) {
+                                existingJs = existingJs.substring(0, startIdx) + existingJs.substring(endIdx + END_MARKER.length);
+                                config.CustomJs = existingJs.trim();
+                                changed = true;
+                            }
+                        }
+                        
+                        // Remove CSS injection
+                        if (existingCss.indexOf(cssMarker) !== -1) {
+                            var cssStart = existingCss.indexOf(cssMarker);
+                            var cssEnd = existingCss.indexOf(cssEndMarker);
+                            if (cssEnd > cssStart) {
+                                existingCss = existingCss.substring(0, cssStart) + existingCss.substring(cssEnd + cssEndMarker.length);
+                                config.CustomCss = existingCss.trim();
+                                changed = true;
+                            }
+                        }
+                        
+                        if (changed) {
+                            return ApiClient.updateNamedConfiguration('branding', config).then(function() {
+                                if (!silent) {
+                                    statusEl.innerHTML = '<span style="color: #4caf50;">✓ Custom logo removed from branding</span><br><small>Hard refresh your browser to see the default logo.</small>';
+                                }
+                            });
+                        }
+                        
+                        if (!silent) {
+                            statusEl.innerHTML = '<span style="color: #888;">No custom logo injection found in branding</span>';
+                        }
+                    }).catch(function(err) {
+                        if (!silent) {
+                            statusEl.innerHTML = '<span style="color: #ff5722;">✗ Error: ' + err.message + '</span>';
+                        }
+                    });
+                }
+
+                document.querySelector('#LogoSwapConfigPage').addEventListener('viewshow', init);
+                
+                if (document.readyState === 'complete') {
+                    init();
+                } else {
+                    window.addEventListener('load', init);
+                }
+            })();
+        </script>
+    </div>
+</body>
+</html>
