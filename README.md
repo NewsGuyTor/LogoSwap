@@ -1,6 +1,6 @@
 <img src="static/icon.png" alt="LogoSwap" width="140" align="right">
 
-# LogoSwap
+## LogoSwap
 
 **Custom logo replacement plugin for Jellyfin 10.11+**
 
