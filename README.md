@@ -1,14 +1,16 @@
 # LogoSwap
 
 **Custom logo replacement plugin for Jellyfin 10.11+**
+<img src="static/icon.png" alt="LogoSwap" width="140" align="right">
 
 Replace the default Jellyfin branding with your own logo across the entire interface—no manual file editing required.
+
+
 
 ![Jellyfin](https://img.shields.io/badge/Jellyfin-10.11+-00a4dc?style=flat-square&logo=jellyfin)
 ![.NET](https://img.shields.io/badge/.NET-9.0-512bd4?style=flat-square&logo=dotnet)
 ![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
 
-<img src="static/icon.png" alt="LogoSwap" width="140" align="right">
 
 ## Features
 
