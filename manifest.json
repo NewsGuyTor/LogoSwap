@@ -9,6 +9,14 @@
     "imageUrl": "https://raw.githubusercontent.com/NewsGuyTor/LogoSwap/main/static/icon.png",
     "versions": [
       {
+        "version": "1.1.0",
+        "changelog": "Simplified CSS injection - cleaner generated CSS, removed redundant selectors.",
+        "targetAbi": "10.11.0.0",
+        "sourceUrl": "https://github.com/NewsGuyTor/LogoSwap/releases/download/1.1.0/LogoSwap_1.1.0.zip",
+        "checksum": "a970a7d2fae0ebe816ff056250c19611",
+        "timestamp": "2025-11-25T22:50:14Z"
+      },
+      {
         "version": "1.0.0",
         "changelog": "Initial release. Upload custom logos, auto-inject via branding settings, Jellyfin 10.11 compatible.",
         "targetAbi": "10.11.0.0",
