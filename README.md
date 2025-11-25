@@ -1,10 +1,8 @@
-<p align="center">
-  <img src="static/icon.png" alt="LogoSwap" width="180">
-</p>
+<img src="static/icon.png" alt="LogoSwap" width="140" align="right">
 
-<h1 align="center">LogoSwap</h1>
+# LogoSwap
 
-<p align="center"><strong>Custom logo replacement plugin for Jellyfin 10.11+</strong></p>
+**Custom logo replacement plugin for Jellyfin 10.11+**
 
 Replace the default Jellyfin branding with your own logo across the entire interface—no manual file editing required.
 
