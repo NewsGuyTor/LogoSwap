@@ -10,8 +10,6 @@ Replace the default Jellyfin branding with your own logo across the entire inter
 ![.NET](https://img.shields.io/badge/.NET-9.0-512bd4?style=flat-square&logo=dotnet)
 ![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
 
----
-
 ## Features
 
 - **Simple Upload Interface** — Upload your logo directly from the Jellyfin dashboard
