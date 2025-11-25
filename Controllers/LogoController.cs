@@ -91,10 +91,12 @@ public class LogoController : ControllerBase
     /// Gets the current custom logo.
     /// </summary>
     /// <response code="200">Returns the custom logo image.</response>
+    /// <response code="304">Logo not modified (ETag matches).</response>
     /// <response code="404">No custom logo found.</response>
     /// <returns>The logo image file.</returns>
     [HttpGet("image")]
     [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status304NotModified)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public ActionResult GetLogo()
     {
@@ -104,6 +106,20 @@ public class LogoController : ControllerBase
         {
             return NotFound("No custom logo configured.");
         }
+
+        var fileInfo = new FileInfo(logoPath);
+        var etag = $"\"{fileInfo.LastWriteTimeUtc.Ticks:X}\"";
+
+        // Check If-None-Match header for conditional request
+        if (Request.Headers.TryGetValue("If-None-Match", out var ifNoneMatch)
+            && ifNoneMatch.ToString() == etag)
+        {
+            return StatusCode(StatusCodes.Status304NotModified);
+        }
+
+        // Set caching headers
+        Response.Headers["ETag"] = etag;
+        Response.Headers["Cache-Control"] = "no-cache, must-revalidate";
 
         var fileStream = System.IO.File.OpenRead(logoPath);
         return File(fileStream, "image/png");

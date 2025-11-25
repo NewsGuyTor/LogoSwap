@@ -19,6 +19,9 @@
                         <div class="fieldDescription">
                             Upload a PNG image to replace the Jellyfin logo throughout the interface.
                         </div>
+                        <div class="fieldDescription" style="margin-top: 0.5em; color: #ff9800; font-size: 0.9em;">
+                            <span style="opacity: 0.9;">⚠ Note: The custom logo will appear on the main Jellyfin interface but will not be visible within the Dashboard admin area.</span>
+                        </div>
                         
                         <div class="inputContainer" style="margin-top: 1em;">
                             <input type="file" id="logoFile" accept="image/png" style="display: none;" />
@@ -53,7 +56,10 @@
                         </div>
                         <div class="fieldDescription">
                             Click the button below to automatically inject the logo replacement script into Jellyfin's branding settings.
-                            This will make the custom logo appear across all Jellyfin pages.
+                            This will make the custom logo appear across the main Jellyfin pages.
+                        </div>
+                        <div class="fieldDescription" style="margin-top: 0.5em; color: #888; font-size: 0.85em;">
+                            <span>ℹ The Dashboard admin pages use a separate interface where custom branding is not applied.</span>
                         </div>
                         <div style="margin-top: 1em;">
                             <button type="button" id="applyBrandingBtn" is="emby-button" class="raised button-submit block">
@@ -273,31 +279,16 @@
                             }
                             
                             // Add CSS injection for logo replacement
-                            // Jellyfin uses h3.pageTitleWithLogo with background-image, not <img> tags
                             var logoUrl = '/logoswap/image?v=' + Date.now();
                             var cssInjection = cssMarker + '\n' +
-                                '/* Header logo - h3 element with background-image */\n' +
-                                'h3.pageTitle.pageTitleWithLogo {\n' +
+                                '.pageTitleWithLogo, .pageTitleWithDefaultLogo,\n' +
+                                '.logoImage, .navDrawerLogo, .adminDrawerLogo {\n' +
                                 '  background-image: url("' + logoUrl + '") !important;\n' +
                                 '  background-size: contain !important;\n' +
                                 '  background-repeat: no-repeat !important;\n' +
-                                '  background-position: center left !important;\n' +
                                 '}\n' +
-                                '.pageTitleWithDefaultLogo {\n' +
-                                '  background-image: url("' + logoUrl + '") !important;\n' +
-                                '}\n' +
-                                '/* Sidebar/drawer logo */\n' +
-                                '.mainDrawer .logoImage, .navDrawerLogo, .adminDrawerLogo {\n' +
-                                '  background-image: url("' + logoUrl + '") !important;\n' +
-                                '  background-size: contain !important;\n' +
-                                '  background-repeat: no-repeat !important;\n' +
-                                '  background-position: center !important;\n' +
-                                '}\n' +
-                                '/* Banner images used in some places */\n' +
-                                'img[src*="banner-light"], img[src*="banner-dark"], img[src*="icon-transparent"] {\n' +
-                                '  content: url("' + logoUrl + '") !important;\n' +
-                                '}\n' +
-                                '.imgLogoIcon {\n' +
+                                'img[src*="banner-light"], img[src*="banner-dark"],\n' +
+                                'img[src*="icon-transparent"], .imgLogoIcon {\n' +
                                 '  content: url("' + logoUrl + '") !important;\n' +
                                 '}\n' +
                                 cssEndMarker;

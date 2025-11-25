@@ -58,7 +58,9 @@ Navigate to **Dashboard** → **Plugins** → **LogoSwap**
 - Click **Apply Custom Logo to Branding**
 - Hard refresh your browser (`Ctrl+Shift+R` / `Cmd+Shift+R`)
 
-Your custom logo will now appear across all Jellyfin pages.
+Your custom logo will now appear across the main Jellyfin interface.
+
+> **Note:** The custom logo will not appear in the Dashboard admin area, as it uses a separate interface where custom branding is not applied.
 
 ### 3. Manage Your Logo
 
@@ -122,6 +124,32 @@ Output: `bin/Debug/net9.0/LogoSwap.dll`
 - Ensure the file is PNG format
 - Check Jellyfin has write permissions to its plugin config directory
 - Review server logs for detailed error messages
+
+---
+
+## FAQ
+
+**Why doesn't my logo appear in the Dashboard?**
+
+The Jellyfin Dashboard admin area uses a separate interface where custom branding (Custom CSS/JS) is not applied. This is a limitation of how Jellyfin handles its admin pages. Your custom logo will appear on all regular user-facing pages.
+
+**Can I replace the splash/loading screen logo?**
+
+Not yet. The splash screen that appears when Jellyfin is loading is embedded in the core application and cannot be replaced via branding customization. This may be added in a future version if there's a feasible approach.
+
+**Where is my logo stored?**
+
+Your logo is stored in the plugin's data directory within Jellyfin's configuration folder. It's served via the `/logoswap/image` endpoint.
+
+---
+
+## Contributing
+
+Bug reports, feature requests, and pull requests are welcome!
+
+- **Found a bug?** [Open an issue](https://github.com/NewsGuyTor/LogoSwap/issues)
+- **Have an idea?** [Start a discussion](https://github.com/NewsGuyTor/LogoSwap/discussions)
+- **Want to contribute?** Fork the repo and submit a PR
 
 ---
 
