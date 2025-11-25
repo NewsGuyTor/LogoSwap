@@ -9,6 +9,14 @@
     "imageUrl": "https://raw.githubusercontent.com/NewsGuyTor/LogoSwap/main/static/icon.png",
     "versions": [
       {
+        "version": "1.1.1",
+        "changelog": "Updated plugin icon.",
+        "targetAbi": "10.11.0.0",
+        "sourceUrl": "https://github.com/NewsGuyTor/LogoSwap/releases/download/1.1.1/LogoSwap_1.1.1.zip",
+        "checksum": "636687fd8b3e4640eb40a0133abb4398",
+        "timestamp": "2025-11-25T23:18:47Z"
+      },
+      {
         "version": "1.1.0",
         "changelog": "Simplified CSS injection - cleaner generated CSS, removed redundant selectors.",
         "targetAbi": "10.11.0.0",
