@@ -9,6 +9,14 @@
     "imageUrl": "https://raw.githubusercontent.com/NewsGuyTor/LogoSwap/main/static/icon.png",
     "versions": [
       {
+        "version": "1.6.0.0",
+        "changelog": "Fix Jellyfin 12 header and drawer logo sizing, including ElegantFin and mobile layouts. Support configured Base URLs and nested paths (Ref #4). Add separate PNG, ICO, and SVG favicons (Ref #3). Require administrator authentication for uploads and deletions. After updating, restart Jellyfin, apply the logo to branding again, and hard refresh your browser.",
+        "targetAbi": "10.11.0.0",
+        "sourceUrl": "https://github.com/NewsGuyTor/LogoSwap/releases/download/1.6.0/LogoSwap_1.6.0.zip",
+        "checksum": "2186dec88abcbe879d5d6c0366d83f5b",
+        "timestamp": "2026-10-15T17:34:22Z"
+      },
+      {
         "version": "1.5.0.0",
         "changelog": "Fix plugin thumbnail display, double file dialog, auto-upload on file select, and logo transparency preservation.",
         "targetAbi": "10.11.0.0",
