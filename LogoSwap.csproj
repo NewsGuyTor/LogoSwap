@@ -16,6 +16,9 @@
 
   <ItemGroup>
     <EmbeddedResource Include="Views\configPage.html" />
+    <EmbeddedResource Include="Views\branding.css" />
+    <EmbeddedResource Include="Views\branding.js" />
+    <Compile Remove="tests\**\*.cs" />
   </ItemGroup>
 
   <ItemGroup>

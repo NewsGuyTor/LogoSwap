@@ -1,0 +1,31 @@
+/* LogoSwap CSS */
+.pageTitleWithLogo, .pageTitleWithDefaultLogo,
+.logoImage, .navDrawerLogo, .adminDrawerLogo {
+  background-image: url(__LOGO_URL__) !important;
+  background-size: contain !important;
+  background-repeat: no-repeat !important;
+  background-color: transparent !important;
+}
+img[src*="banner-light"], img[src*="banner-dark"],
+img[src*="icon-transparent"], .imgLogoIcon {
+  content: url(__LOGO_URL__) !important;
+}
+
+/* Jellyfin 12 uses a square icon slot. Keep wordmarks wide, even with themes. */
+/* Drawers can be portaled directly under body, outside reactRoot. */
+:is(#reactRoot, body) :is(.MuiAppBar-root, .MuiDrawer-root) img:is([src*="icon-transparent"], [src*="/logoswap/image"]) {
+  width: 128px !important;
+  height: 40px !important;
+  max-width: none !important;
+  max-height: none !important;
+  object-fit: contain !important;
+  flex-shrink: 0 !important;
+}
+
+@media (max-width: 600px) {
+  :is(#reactRoot, body) .MuiAppBar-root img:is([src*="icon-transparent"], [src*="/logoswap/image"]) {
+    width: 104px !important;
+    height: 32.5px !important;
+  }
+}
+/* END LogoSwap CSS */

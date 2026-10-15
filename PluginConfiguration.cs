@@ -13,10 +13,16 @@ public class PluginConfiguration : BasePluginConfiguration
     public PluginConfiguration()
     {
         LogoPath = string.Empty;
+        FaviconPath = string.Empty;
     }
 
     /// <summary>
     /// Gets or sets the path to the custom logo file.
     /// </summary>
     public string LogoPath { get; set; }
+
+    /// <summary>
+    /// Gets or sets the path to the custom browser icon.
+    /// </summary>
+    public string FaviconPath { get; set; }
 }

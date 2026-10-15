@@ -2,7 +2,9 @@ using System;
 using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Threading.Tasks;
+using MediaBrowser.Common.Api;
 using MediaBrowser.Common.Configuration;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -39,6 +41,7 @@ public class LogoController : ControllerBase
     /// <response code="500">Error saving file.</response>
     /// <returns>A status message.</returns>
     [HttpPost("upload")]
+    [Authorize(Policy = Policies.RequiresElevation)]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
@@ -132,6 +135,7 @@ public class LogoController : ControllerBase
     /// <response code="404">No custom logo found.</response>
     /// <returns>A status message.</returns>
     [HttpDelete("delete")]
+    [Authorize(Policy = Policies.RequiresElevation)]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public ActionResult DeleteLogo()
@@ -175,7 +179,15 @@ public class LogoController : ControllerBase
         var logoPath = Plugin.Instance?.Configuration.LogoPath;
         var hasLogo = !string.IsNullOrEmpty(logoPath) && System.IO.File.Exists(logoPath);
         
-        return Ok(new { hasLogo, logoUrl = hasLogo ? "/logoswap/image" : null });
+        var faviconPath = Plugin.Instance?.Configuration.FaviconPath;
+        var hasFavicon = !string.IsNullOrEmpty(faviconPath) && System.IO.File.Exists(faviconPath);
+        return Ok(new
+        {
+            hasLogo,
+            logoUrl = hasLogo ? AssetUrl("image") : null,
+            hasFavicon,
+            faviconUrl = hasFavicon ? AssetUrl("favicon") : null
+        });
     }
 
     /// <summary>
@@ -188,6 +200,25 @@ public class LogoController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     public ActionResult<string> GetScript()
     {
-        return Content(LogoInjector.GetInjectionScript(), "application/javascript");
+        return Content(LogoInjector.GetInjectionScript(VersionedLogoUrl()), "application/javascript");
+    }
+
+    /// <summary>
+    /// Gets base-path-aware CSS for Jellyfin branding.
+    /// </summary>
+    /// <returns>The branding stylesheet.</returns>
+    [HttpGet("styles")]
+    [Produces("text/css")]
+    public ActionResult GetStyles() => Content(LogoInjector.GetStylesheet(VersionedLogoUrl()), "text/css");
+
+    private string AssetUrl(string asset) => Request.PathBase.ToUriComponent() + "/logoswap/" + asset;
+
+    private string VersionedLogoUrl()
+    {
+        var path = Plugin.Instance?.Configuration.LogoPath;
+        var version = !string.IsNullOrEmpty(path) && System.IO.File.Exists(path)
+            ? System.IO.File.GetLastWriteTimeUtc(path).Ticks
+            : 0;
+        return AssetUrl("image") + "?v=" + version;
     }
 }

@@ -1,5 +1,6 @@
 using MediaBrowser.Controller;
 using MediaBrowser.Controller.Plugins;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace LogoSwap;
@@ -13,5 +14,6 @@ public class PluginServiceRegistrator : IPluginServiceRegistrator
     public void RegisterServices(IServiceCollection serviceCollection, IServerApplicationHost applicationHost)
     {
         serviceCollection.AddHostedService<LogoInjector>();
+        serviceCollection.AddTransient<IStartupFilter, FaviconStartupFilter>();
     }
 }
